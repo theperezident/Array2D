@@ -97,23 +97,16 @@ class Point:
 class Array2D:
     
     """Initialize 2D array with immutable Points, no gaps or overlap allowed"""
-    def __init__(self, rows: int, cols: int, defaultValue=None, wrapX = False, wrapY = False) -> None:
+    def __init__(self, rows: int, cols: int, defaultData=None, wrapX = False, wrapY = False) -> None:
         self._rows = rows
         self._cols = cols
         self._wrapX = wrapX
         self._wrapY = wrapY
-        self._matrix = []
-        for i in range(rows):
-            for j in range(cols):
-                self._matrix.append(Point((j,i),defaultValue))
-
-        # Make a list specifically just with coordinates
-        self._matrixCoords = []
-        for point in self._matrix:
-            self._matrixCoords.append(point.getPos())
-        
-        # Create a dictionary for fast lookups in massive matrices
-        self._matrixDict = dict(zip(self._matrixCoords,self._matrix))
+        self._matrix = {
+            (j,i): Point((j,i),defaultData)
+            for i in range(rows)
+            for j in range(cols)
+        }
 
     """Basic data for debugging"""
     def __repr__(self) -> str:
@@ -122,7 +115,7 @@ class Array2D:
     """Pull data from Point at given coordinates"""
     def getData(self, xyPair: Tuple[int,int]):
         try:
-            return self._matrixDict[xyPair].getData()
+            return self._matrix[xyPair].getData()
         except KeyError:
             print("ERROR: Given coordinates are out of range. Returning None.")
         return None
@@ -130,15 +123,15 @@ class Array2D:
     """Update data from Point at given coordinates"""
     def setData(self, xyPair: Tuple[int,int], data) -> None:
         try:
-            self._matrixDict[xyPair].setData(data)
+            self._matrix[xyPair].setData(data)
         except KeyError:
             print("ERROR: Given coordinates are out of range. No Point data was updated.")
 
     """Return all coordinates containing a specific piece of data"""
-    def findData(self, data) -> list[Tuple[int,int]]:
+    def dataLocs(self, data) -> list[Tuple[int,int]]:
         dataList = []
-        for point in self._matrix:
-            if point.getData() == data: dataList.append(point.getPos())
+        for key, value in self._matrix.items():
+            if value.getData() == data: dataList.append(key)
         return dataList
 
     """Return number of rows in matrix"""
