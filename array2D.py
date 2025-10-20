@@ -18,6 +18,7 @@ Classes:
 from __future__ import annotations
 from enum import Enum
 from typing import Tuple
+from warnings import warn
 
 class Direction(Enum):
 
@@ -55,7 +56,7 @@ class Point:
         if not matrix or matrix.cols > xyPair[0] and matrix.rows > xyPair[1] and xyPair[0] >= 0 and xyPair[1] >= 0:
             self._xyPair = xyPair
         else:
-            print("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+            warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
 
     """Give location of new relative Point in a certain direction a certain number of times"""
     def getMove(self, direction: Direction, moves=1) -> Tuple[int, int]:
@@ -69,30 +70,42 @@ class Point:
             case Direction.RIGHT:
                 return (self._xyPair[0] + moves, self._xyPair[1])
             case _:
-                print("ERROR: No direction specified. Returning specified Point location.")
+                warn("ERROR: No direction specified. Returning specified Point location.")
                 return self._xyPair
             
     """Move this point a certain direction a certain number of times"""
     def setMove(self, direction: Direction, moves=1, matrix: Array2D | None = None) -> None:
         match direction:
             case Direction.UP:
-                if not matrix or matrix.wrapY == True or (self._xyPair[1] - moves) >= 0:
-                    self._xyPair = (self._xyPair[0], (self._xyPair[1] - moves) % (matrix.rows if (matrix and matrix.wrapY) else 1)) # Only apply modulo if matrix is provided, and y-wrapping is true. Otherwise, % 1 will affect nothing.
-                else: print("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+                if not matrix or (self._xyPair[1] - moves) >= 0:
+                    if matrix and matrix.wrapY:
+                        self._xyPair = (self._xyPair[0], (self._xyPair[1] - moves) % matrix.rows)
+                    else:
+                        self._xyPair = (self._xyPair[0], self._xyPair[1] - moves)
+                else: warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
             case Direction.DOWN:
-                if not matrix or matrix.wrapY == True or (self._xyPair[1] + moves) < matrix.rows:
-                    self._xyPair = (self._xyPair[0], (self._xyPair[1] + moves) % (matrix.rows if (matrix and matrix.wrapY) else 1)) # Only apply modulo if matrix is provided, and y-wrapping is true. Otherwise, % 1 will affect nothing.
-                else: print("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+                if not matrix or (self._xyPair[1] + moves) < matrix.rows:
+                    if matrix and matrix.wrapY:
+                        self._xyPair = (self._xyPair[0], (self._xyPair[1] + moves) % matrix.rows)
+                    else:
+                        self._xyPair = (self._xyPair[0], self._xyPair[1] + moves)
+                else: warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
             case Direction.LEFT:
-                if not matrix or matrix.wrapX == True or (self._xyPair[0] - moves) >= 0:
-                    self._xyPair = ((self._xyPair[0] - moves) % (matrix.cols if (matrix and matrix.wrapX) else 1), self._xyPair[1]) # Only apply modulo if matrix is provided, and x-wrapping is true. Otherwise, % 1 will affect nothing.
-                else: print("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+                if not matrix or (self._xyPair[0] - moves) >= 0:
+                    if matrix and matrix.wrapX:
+                        self._xyPair = ((self._xyPair[0] - moves) % matrix.cols, self._xyPair[1])
+                    else:
+                        self._xyPair = (self._xyPair[0] - moves, self._xyPair[1])
+                else: warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
             case Direction.RIGHT:
-                if not matrix or matrix.wrapX == True or (self._xyPair[0] + moves) < matrix.cols:
-                    self._xyPair = ((self._xyPair[0] + moves) % (matrix.cols if (matrix and matrix.wrapX) else 1), self._xyPair[1]) # Only apply modulo if matrix is provided, and x-wrapping is true. Otherwise, % 1 will affect nothing.
-                else: print("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+                if not matrix or (self._xyPair[0] + moves) < matrix.cols:
+                    if matrix and matrix.wrapX:
+                        self._xyPair = ((self._xyPair[0] + moves) % matrix.cols, self._xyPair[1])
+                    else:
+                        self._xyPair = (self._xyPair[0] + moves, self._xyPair[1])
+                else: warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
             case _:
-                print("ERROR: No direction specified. Point was not moved.")
+                warn("ERROR: No direction specified. Point was not moved.")
 
 class Array2D:
     
@@ -117,7 +130,7 @@ class Array2D:
         try:
             return self._matrix[xyPair].getData()
         except KeyError:
-            print("ERROR: Given coordinates are out of range. Returning None.")
+            warn("ERROR: Given coordinates are out of range. Returning None.")
         return None
 
     """Update data from Point at given coordinates"""
@@ -125,7 +138,7 @@ class Array2D:
         try:
             self._matrix[xyPair].setData(data)
         except KeyError:
-            print("ERROR: Given coordinates are out of range. No Point data was updated.")
+            warn("ERROR: Given coordinates are out of range. No Point data was updated.")
 
     """Return all coordinates containing a specific piece of data"""
     def dataLocs(self, data) -> list[Tuple[int,int]]:
