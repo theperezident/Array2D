@@ -133,6 +133,11 @@ class Array2D:
     def __repr__(self) -> str:
         return f'Array2D({self._rows}x{self._cols})'
     
+    """Yields all dictionary entries of this Array2D as Points"""
+    def __iter__(self):
+        for coord, data in self._matrix.items():
+            yield Point(coord,data)
+    
     """Yields the x, y tuple in row-iterating order for the given cols and rows, iterates over entire Array2D if cols/rows unspecified."""
     """No values iterates all points in Array2D. transpose = True iterates over columns instead of rows"""
     def iterLocs(self, cols: None | int | list[int] = None, rows: None | int | list[int] = None, transpose: bool = False):
