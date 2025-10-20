@@ -11,7 +11,7 @@ Coordinate System:
 
 Classes:
 - Point: Represents a coordinate with optional data of any type
-- Array2D: 2D grid of Points with fast lookup
+- Array2D: 2D grid of coordinates and data with fast lookup
 - Direction: Enum for cardinal directions
 """
 
@@ -57,6 +57,10 @@ class Point:
             self._xyPair = xyPair
         else:
             warn("ERROR: New Point position is out of range of given matrix. Point was not moved.")
+
+    """Assign data from point directly to same coordinates on a given Array2D"""
+    def assign(self, matrix: Array2D) -> None:
+        matrix.setData(self._xyPair,self._data)
 
     """Give location of new relative Point in a certain direction a certain number of times"""
     def getMove(self, direction: Direction, moves=1) -> Tuple[int, int]:
@@ -109,16 +113,16 @@ class Point:
 
 class Array2D:
     
-    """Initialize 2D array with immutable Points, no gaps or overlap allowed"""
+    """Initialize 2D array with immutable coordinates, no gaps or overlap allowed"""
     def __init__(self, rows: int, cols: int, defaultData=None, wrapX = False, wrapY = False) -> None:
         self._rows = rows
         self._cols = cols
         self._wrapX = wrapX
         self._wrapY = wrapY
         self._matrix = {
-            (j,i): Point((j,i),defaultData)
-            for i in range(rows)
+            (j,i): defaultData
             for j in range(cols)
+            for i in range(rows)
         }
 
     """Basic data for debugging"""
@@ -128,24 +132,36 @@ class Array2D:
     """Pull data from Point at given coordinates"""
     def getData(self, xyPair: Tuple[int,int]):
         try:
-            return self._matrix[xyPair].getData()
+            return self._matrix[xyPair]
         except KeyError:
             warn("ERROR: Given coordinates are out of range. Returning None.")
         return None
 
     """Update data from Point at given coordinates"""
     def setData(self, xyPair: Tuple[int,int], data) -> None:
-        try:
-            self._matrix[xyPair].setData(data)
-        except KeyError:
+        if xyPair in self._matrix:
+            self._matrix[xyPair] = data
+        else:
             warn("ERROR: Given coordinates are out of range. No Point data was updated.")
 
     """Return all coordinates containing a specific piece of data"""
     def dataLocs(self, data) -> list[Tuple[int,int]]:
         dataList = []
         for key, value in self._matrix.items():
-            if value.getData() == data: dataList.append(key)
+            if value == data: dataList.append(key)
         return dataList
+    
+    """Returns the requested coordinates as a full Point class"""
+    def asPoint(self, xyPair: Tuple[int,int]):
+        try:
+            return Point(xyPair,self._matrix[xyPair])
+        except KeyError:
+            warn("ERROR: Given coordinates are out of range. Returning None.")
+            return None
+
+    """Dictionary of all Points in Array2D, going in 'reading' order, i.e. left to right, then down. Coordinates are keys, Points are values"""
+    def allPoints(self) -> dict:
+        return self._matrix
 
     """Return number of rows in matrix"""
     @property
